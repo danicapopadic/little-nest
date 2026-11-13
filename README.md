@@ -1,6 +1,6 @@
 # Little Nest
 
-A household management application built with Python.
+Household management application built with Python.
 
 ## Requirements
 
