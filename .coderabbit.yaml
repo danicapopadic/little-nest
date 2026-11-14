@@ -1,0 +1,21 @@
+reviews:
+  request_changes_workflow: false
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    base_branches:
+      - main
+
+  path_instructions:
+    - path: "src/**/*.py"
+      instructions: |
+        Focus on:
+        - Python correctness, type hints, and idiomatic Python.
+        - Security vulnerabilities and input validation.
+        - Maintainability and clear separation of responsibilities.
+        - FastAPI and Pydantic best practices.
+        - SQLAlchemy session management and database queries.
+        - Missing tests and unhandled edge cases.
+        Prefer simple, maintainable solutions over unnecessary abstractions.
