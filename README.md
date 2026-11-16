@@ -63,3 +63,16 @@ uv sync
 Dependencies are defined in `pyproject.toml`, and exact resolved versions are recorded in `uv.lock`.
 
 Both files should be committed to Git.
+
+## Running the API locally
+
+Start the development server:
+
+```bash
+uv run uvicorn little_nest.main:app --reload
+```
+
+The API is available at http://127.0.0.1:8000.
+
+- Health check: `/health`
+- API documentation: `/docs`
