@@ -96,3 +96,43 @@ Run the automated test suite:
 ```bash
 uv run pytest
 ```
+
+## Code quality checks
+
+The project uses **Ruff** for linting and formatting, **Pyright** for type checking, and **Pytest** for automated tests.
+
+### Local checks
+
+Run all code quality checks:
+
+```bash
+uv run pre-commit run --all-files
+```
+
+Run tests:
+
+```bash
+uv run pytest
+```
+
+Individual checks can also be run:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run pyright
+```
+
+### Pre-commit hooks
+
+Install Git hooks once after setting up the project:
+
+```bash
+uv run pre-commit install
+```
+
+Ruff and Pyright checks run automatically before each commit, blocking commits if any check fails.
+
+### Continuous integration
+
+GitHub Actions automatically runs Ruff, Pyright, and Pytest on pull requests targeting `main`. All checks must pass before merging.
