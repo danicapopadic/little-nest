@@ -88,3 +88,11 @@ The API is available at http://127.0.0.1:8000.
 
 - Health check: `/health`
 - API documentation: `/docs`
+
+## Running tests
+
+Run the automated test suite:
+
+```bash
+uv run pytest
+```
