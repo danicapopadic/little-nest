@@ -1,6 +1,6 @@
 # Little Nest
 
-A household management application built with Python.
+Household management application built with Python.
 
 ## Requirements
 
@@ -63,6 +63,18 @@ uv sync
 Dependencies are defined in `pyproject.toml`, and exact resolved versions are recorded in `uv.lock`.
 
 Both files should be committed to Git.
+
+## Code Reviews
+
+Little Nest uses [CodeRabbit](https://www.coderabbit.ai/) for AI-assisted pull request reviews.
+
+Review behavior is configured in [`.coderabbit.yaml`](.coderabbit.yaml), with a focus on Python correctness, security, maintainability, and testing.
+
+**Note:** CodeRabbit currently requires manual review triggering because the repository has fewer than 10 GitHub stars. Reviews can be requested through the **Trigger review** option on a pull request.
+
+CodeRabbit feedback is advisory. All suggestions should be evaluated before implementation, and AI reviews do not replace automated tests or developer judgment. Invalid or irrelevant suggestions may be dismissed with an explanation.
+
+CodeRabbit has repository access through its GitHub App. Review permissions and plan or billing limits should be checked in CodeRabbit before making changes.
 
 ## Running the API locally
 
