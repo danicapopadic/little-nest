@@ -75,3 +75,16 @@ Review behavior is configured in [`.coderabbit.yaml`](.coderabbit.yaml), with a 
 CodeRabbit feedback is advisory. All suggestions should be evaluated before implementation, and AI reviews do not replace automated tests or developer judgment. Invalid or irrelevant suggestions may be dismissed with an explanation.
 
 CodeRabbit has repository access through its GitHub App. Review permissions and plan or billing limits should be checked in CodeRabbit before making changes.
+
+## Running the API locally
+
+Start the development server:
+
+```bash
+uv run uvicorn little_nest.main:app --reload
+```
+
+The API is available at http://127.0.0.1:8000.
+
+- Health check: `/health`
+- API documentation: `/docs`
