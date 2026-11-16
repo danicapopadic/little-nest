@@ -136,3 +136,43 @@ Ruff and Pyright checks run automatically before each commit, blocking commits i
 ### Continuous integration
 
 GitHub Actions automatically runs Ruff, Pyright, and Pytest on pull requests targeting `main`. All checks must pass before merging.
+
+## Docker development environment
+
+The development environment uses Docker Compose to run FastAPI and PostgreSQL.
+
+### Setup
+
+1. Install Docker Desktop.
+2. Create a `.env` file in the project root:
+
+   ```dotenv
+   POSTGRES_PASSWORD=your_local_password
+   ```
+
+3. Build and start the services:
+
+   ```bash
+   docker compose up --build -d
+   ```
+
+### Useful commands
+
+| Command | Description |
+|---|---|
+| `docker compose ps` | Check container status |
+| `docker compose logs -f api` | View API logs |
+| `docker compose logs -f db` | View database logs |
+| `docker compose stop` | Stop services |
+| `docker compose up -d` | Start services again |
+| `docker compose down` | Remove containers and network, preserving database data |
+
+### Access
+
+- API: http://localhost:8000
+- Health check: http://localhost:8000/health
+- API documentation: http://localhost:8000/docs
+
+PostgreSQL data is stored in a persistent Docker volume.
+
+**Important:** Avoid `docker compose down -v` unless you intentionally want to delete the database volume and its data.
