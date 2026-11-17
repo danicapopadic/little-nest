@@ -4,10 +4,12 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://little_nest:${POSTGRES_PASSWORD}@db:5432/little_nest
+      DATABASE_URL: postgresql+psycopg://little_nest:${POSTGRES_PASSWORD}@db:5432/little_nest
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./alembic/versions:/app/alembic/versions
 
   db:
     image: postgres:17
