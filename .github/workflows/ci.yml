@@ -31,4 +31,6 @@ jobs:
         run: uv run pyright
 
       - name: Pytest
+        env:
+          DATABASE_URL: postgresql+psycopg://test:test@localhost:5432/test
         run: uv run pytest
