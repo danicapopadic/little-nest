@@ -107,10 +107,7 @@ The development environment uses Docker Compose to run FastAPI and PostgreSQL.
 
    ```dotenv
    POSTGRES_PASSWORD=your_local_password
-   DATABASE_URL=postgresql+psycopg://little_nest:your_local_password@localhost:5432/little_nest
    ```
-
-   The `DATABASE_URL` shown above is for connecting from your local machine. The Docker Compose API service uses `db` as the PostgreSQL hostname.
 
 3. Build and start the services:
 
@@ -145,6 +142,8 @@ The `.env` file contains local credentials and must never be committed to Git.
 ## Database & Migrations
 
 Little Nest uses PostgreSQL for data storage, SQLAlchemy for database access, and Alembic for schema migrations.
+
+Database migrations run inside the API container, which connects to PostgreSQL using the Docker Compose service hostname db.
 
 ### Creating migrations
 
