@@ -8,7 +8,9 @@ dependencies = [
     "alembic>=1.20.1",
     "fastapi>=0.163.1",
     "psycopg[binary]>=3.3.9",
+    "pwdlib[argon2]>=0.4.2",
     "pydantic-settings>=2.16.3",
+    "pydantic[email]>=2.14.3",
     "sqlalchemy>=2.1.9",
     "uvicorn[standard]>=0.54.0",
 ]
@@ -23,6 +25,7 @@ dev = [
     "pre-commit>=4.7.0",
     "pyright>=1.1.414",
     "pytest>=9.2.0",
+    "python-dotenv>=1.2.4",
     "ruff>=0.17.5",
 ]
 
