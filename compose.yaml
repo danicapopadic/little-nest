@@ -9,7 +9,12 @@ services:
       db:
         condition: service_healthy
     volumes:
+      - ./src:/app/src
       - ./alembic/versions:/app/alembic/versions
+    command: >
+      uv run --no-sync uvicorn little_nest.main:app
+      --host 0.0.0.0 --port 8000
+      --reload --reload-dir /app/src
 
   db:
     image: postgres:17

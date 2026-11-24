@@ -132,6 +132,20 @@ The development environment uses Docker Compose to run FastAPI and PostgreSQL.
    docker compose exec api uv run --no-sync alembic upgrade head
    ```
 
+### Automatic reload
+
+The API container mounts the local `src/` directory and uses Uvicorn's automatic reload feature.
+
+Changes to Python source files are automatically reflected in the running application without rebuilding the Docker image.
+
+Rebuild the API image when dependencies or the Dockerfile change:
+
+```bash
+docker compose up --build -d api
+```
+
+Automatic reload is configured in Docker Compose for development only.
+
 ### Useful commands
 
 | Command | Description |
