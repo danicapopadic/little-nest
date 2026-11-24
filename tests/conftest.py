@@ -30,6 +30,7 @@ def postgres_session() -> Iterator[Session]:
     engine = create_engine(url)
 
     try:
+        Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)
         factory = sessionmaker(bind=engine)
 

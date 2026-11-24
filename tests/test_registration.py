@@ -84,3 +84,35 @@ def test_invalid_registration_data_is_rejected(
     assert all("input" not in error for error in errors)
     assert all("ctx" not in error for error in errors)
     assert "123" not in response.text
+
+
+def test_name_with_nul_character_is_rejected(
+    registration_client: TestClient,
+) -> None:
+    response = registration_client.post(
+        "/auth/register",
+        json={
+            "name": "Ada\x00",
+            "email": "ada@example.com",
+            "password": "TestPassword123",
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "name"]
+
+
+def test_unicode_name_is_accepted(
+    registration_client: TestClient,
+) -> None:
+    response = registration_client.post(
+        "/auth/register",
+        json={
+            "name": "Petar Petrović",
+            "email": "petar@example.com",
+            "password": "TestPassword123",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["name"] == "Petar Petrović"
