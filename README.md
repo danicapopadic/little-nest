@@ -17,7 +17,13 @@ Household management application built with Python.
    uv sync
    ```
 
-3. Verify the installation:
+3. Create a local environment configuration:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Verify the installation:
 
    ```bash
    uv run python -c "import little_nest; print('Package import OK')"
@@ -36,14 +42,21 @@ little-nest/
 │   └── env.py
 ├── src/
 │   └── little_nest/
+│       ├── models/
+│       ├── routers/
+│       ├── schemas/
+│       ├── services/
 │       ├── __init__.py
 │       ├── config.py
 │       ├── database.py
-│       └── main.py
+│       ├── main.py
+│       └── security.py
 ├── tests/
 │   ├── conftest.py
 │   ├── test_database.py
-│   └── test_health.py
+│   ├── test_health.py
+│   ├── test_registration.py
+│   └── test_security.py
 ├── .env.example
 ├── .gitignore
 ├── .python-version
@@ -87,14 +100,11 @@ Start the development server:
 uv run uvicorn little_nest.main:app --reload
 ```
 
-The API is available at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+The API is available at http://127.0.0.1:8000.
 
-- Health check: `/health`
-- API documentation: `/docs`
+The application requires a valid `DATABASE_URL` pointing to an accessible PostgreSQL database.
 
-The application requires `DATABASE_URL` to be configured in the environment.
-
-For a complete development environment with PostgreSQL, use Docker Compose as described below.
+The development PostgreSQL container does not expose its port to the host. For a complete development environment, use Docker Compose as described below.
 
 ## Docker development environment
 
@@ -103,17 +113,38 @@ The development environment uses Docker Compose to run FastAPI and PostgreSQL.
 ### Setup
 
 1. Install Docker Desktop.
-2. Create a `.env` file in the project root using `.env.example` as a reference:
-
-   ```dotenv
-   POSTGRES_PASSWORD=your_local_password
-   ```
-
-3. Build and start the services:
+2. Create a `.env` file if one does not already exist:
 
    ```bash
-   docker compose up --build -d
+   cp .env.example .env
    ```
+
+3. Set your local `POSTGRES_PASSWORD` in `.env`.
+4. Build and start the development services:
+
+   ```bash
+   docker compose up --build -d api db
+   ```
+
+5. Apply database migrations:
+
+   ```bash
+   docker compose exec api uv run --no-sync alembic upgrade head
+   ```
+
+### Automatic reload
+
+The API container mounts the local `src/` directory and uses Uvicorn's automatic reload feature.
+
+Changes to Python source files are automatically reflected in the running application without rebuilding the Docker image.
+
+Rebuild the API image when dependencies or the Dockerfile change:
+
+```bash
+docker compose up --build -d api
+```
+
+Automatic reload is configured in Docker Compose for development only.
 
 ### Useful commands
 
@@ -123,27 +154,60 @@ The development environment uses Docker Compose to run FastAPI and PostgreSQL.
 | `docker compose logs -f api` | View API logs |
 | `docker compose logs -f db` | View database logs |
 | `docker compose stop` | Stop services |
-| `docker compose up -d` | Start services again |
-| `docker compose up --build -d` | Rebuild and start services |
-| `docker compose down` | Remove containers and network, preserving database data |
+| `docker compose up -d api db` | Start development services |
+| `docker compose up --build -d api db` | Rebuild and start development services |
+| `docker compose down` | Remove containers and network, preserving persistent database data |
 
 ### Access
 
-- API: [http://localhost:8000](http://localhost:8000)
-- Health check: [http://localhost:8000/health](http://localhost:8000/health)
-- API documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
+- API: http://localhost:8000
+- Health check: http://localhost:8000/health
+- API documentation: http://localhost:8000/docs
 
-PostgreSQL data is stored in a persistent Docker volume.
+Development PostgreSQL data is stored in a persistent Docker volume.
 
 **Important:** Avoid `docker compose down -v` unless you intentionally want to delete the database volume and its data.
 
 The `.env` file contains local credentials and must never be committed to Git.
 
+## API endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Application health check |
+| POST | `/auth/register` | Register a new user |
+
+### User registration
+
+Example request:
+
+```bash
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Ada Lovelace",
+    "email": "ada@example.com",
+    "password": "ExamplePassword123"
+  }'
+```
+
+Registration validates the submitted data, normalizes email addresses to lowercase, rejects duplicate emails, and hashes passwords using Argon2id.
+
+Passwords and password hashes are not included in API responses.
+
+| Status code | Description |
+|---|---|
+| 201 Created | Successful registration |
+| 409 Conflict | Email already registered |
+| 422 Unprocessable Entity | Invalid request data |
+
 ## Database & Migrations
 
 Little Nest uses PostgreSQL for data storage, SQLAlchemy for database access, and Alembic for schema migrations.
 
-Database migrations run inside the API container, which connects to PostgreSQL using the Docker Compose service hostname db.
+Database migrations run inside the API container, which connects to PostgreSQL using the Docker Compose service hostname `db`.
+
+Unique constraints follow the centralized SQLAlchemy naming convention `uq_<table_name>_<column_name>`.
 
 ### Creating migrations
 
@@ -181,10 +245,68 @@ docker compose exec api uv run --no-sync alembic downgrade -1
 
 ## Running tests
 
-Run the automated test suite:
+The project uses Pytest for automated testing, including unit tests and PostgreSQL integration tests.
+
+Registration tests use a dedicated PostgreSQL instance to verify database persistence, password hashing, email uniqueness, and request validation.
+
+### Test database setup
+
+Ensure the following variable is configured in your local `.env`:
+
+```dotenv
+TEST_DATABASE_URL=postgresql+psycopg://test:test@localhost:5433/little_nest_test
+```
+
+Start the test database:
 
 ```bash
-uv run pytest
+docker compose up -d db_test
+```
+
+Verify that PostgreSQL is ready:
+
+```bash
+docker compose exec db_test pg_isready -U test -d little_nest_test
+```
+
+### Running the test suite
+
+Run all tests:
+
+```bash
+DATABASE_URL="$(
+  grep '^TEST_DATABASE_URL=' .env | cut -d= -f2-
+)" uv run pytest
+```
+
+Run registration tests only:
+
+```bash
+DATABASE_URL="$(
+  grep '^TEST_DATABASE_URL=' .env | cut -d= -f2-
+)" uv run pytest tests/test_registration.py -v
+```
+
+The API container and development database do not need to be running.
+
+### Test database isolation
+
+The test database:
+
+- Runs in a separate PostgreSQL 17 container.
+- Uses host port `5433`.
+- Uses temporary storage instead of a persistent volume.
+- Creates and removes test tables through pytest fixtures.
+- Is isolated from the development database.
+
+The PostgreSQL test fixture requires the database name to be `little_nest_test` as an additional safety measure.
+
+Integration tests create tables from SQLAlchemy metadata rather than applying Alembic migrations.
+
+Stop the test database when finished:
+
+```bash
+docker compose stop db_test
 ```
 
 ## Code quality checks
@@ -193,16 +315,10 @@ The project uses **Ruff** for linting and formatting, **Pyright** for type check
 
 ### Local checks
 
-Run all code quality checks:
+Run all pre-commit checks:
 
 ```bash
 uv run pre-commit run --all-files
-```
-
-Run tests:
-
-```bash
-uv run pytest
 ```
 
 Individual checks can also be run:
@@ -213,32 +329,10 @@ uv run ruff format --check .
 uv run pyright
 ```
 
-### Pre-commit hooks
-
-Install Git hooks once after setting up the project:
+Automatically format code:
 
 ```bash
-uv run pre-commit install
+uv run ruff format .
 ```
 
-Ruff and Pyright checks run automatically before each commit, blocking commits if any check fails.
-
-### Continuous integration
-
-GitHub Actions automatically runs Ruff, Pyright, and Pytest on pull requests targeting `main`.
-
-All checks must pass before merging.
-
-## Code reviews
-
-Little Nest uses [CodeRabbit](https://www.coderabbit.ai/) for AI-assisted pull request reviews.
-
-Review behavior is configured in [`.coderabbit.yaml`](.coderabbit.yaml), with a focus on Python correctness, security, maintainability, and testing.
-
-**Note:** CodeRabbit currently requires manual review triggering because the repository has fewer than 10 GitHub stars. Reviews can be requested through the **Trigger review** option on a pull request.
-
-CodeRabbit feedback is advisory. All suggestions should be evaluated before implementation, and AI reviews do not replace automated tests or developer judgment.
-
-Invalid or irrelevant suggestions may be dismissed with an explanation.
-
-CodeRabbit has repository access through its GitHub App. Review permissions and plan or billing limits should be checked in CodeRabbit before making changes.
+Run
